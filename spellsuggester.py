@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
+import numpy as np
+import distancias
 
 class SpellSuggester:
 
@@ -16,7 +18,7 @@ class SpellSuggester:
         """Método constructor de la clase SpellSuggester
 
         Construye una lista de términos únicos (vocabulario),
-
+cd
         Args:
            dist_functions es un diccionario nombre->funcion_distancia
            vocab es una lista de palabras o la ruta de un fichero
@@ -56,6 +58,7 @@ class SpellSuggester:
         elif isinstance(vocabulary,str):
             self.vocabulary = self.build_vocabulary(vocabulary)
         else:
+            print(type(vocabulary))
             raise Exception("SpellSuggester incorrect vocabulary value")
 
     def suggest(self, term, distance=None, threshold=None, flatten=True):
@@ -70,17 +73,31 @@ class SpellSuggester:
             distance = self.default_distance
         if threshold is None:
             threshold = self.default_threshold
+
+        resul =[[] for _ in range(threshold+1)]  
+
+        for term_vocab in self.vocabulary:
+            if distance == 'levenshtein_m':
+                dist = distancias.levenshtein_matriz(term, term_vocab, threshold)
+            elif distance == 'levenshtein_r':
+                dist = distancias.levenshtein_reduccion(term, term_vocab, threshold)
+            elif distance == 'levenshtein':
+                dist = distancias.levenshtein(term, term_vocab, threshold)
+            elif distance == 'damerau_rm':
+                dist = distancias.damerau_restricted_matriz(term, term_vocab, threshold)
+            elif distance == 'damerau_r':
+                dist = distancias.damerau_restricted(term, term_vocab, threshold)
+            elif distance == 'damerau_im':
+                dist = distancias.damerau_intermediate_matriz(term, term_vocab, threshold)
+            elif distance == 'damerau_i':
+                dist = distancias.damerau_intermediate(term, term_vocab, threshold)
+
+            if dist <= threshold:
+                resul[dist].append(term_vocab)
             
-        fdist = self.distance_functions[distance]
-
-        resul = [[] for i in range(threshold+1)] # hasta threshold inclusive
-        for w in self.vocabulary:
-            d = fdist(term,w,threshold)
-            if d <= threshold:
-                resul[d].append(w)
-
         if flatten:
             resul = [word for wlist in resul for word in wlist]
-            
+        
+
         return resul
 
