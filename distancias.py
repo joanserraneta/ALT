@@ -19,7 +19,7 @@ def levenshtein_matriz(x, y, threshold=None):
 
 def levenshtein_edicion(x, y, threshold=None):
     # a partir de la versión levenshtein_matriz
-    return 0,[] # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    return 0,[] # COMPLETAR Y REEMPLAZAR ESTA PARTEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 
 def levenshtein_reduccion(x, y, threshold=None):
     # completar versión con reducción coste espacial
