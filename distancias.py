@@ -19,10 +19,19 @@ def levenshtein_matriz(x, y, threshold=None):
 
 def levenshtein_edicion(x, y, threshold=None):
     # a partir de la versión levenshtein_matriz
-    """
-    Creamos la matriz con el metodo anterior y la metemos en una variable llamada D
-    """
-    D = levenshtein_matriz(x,y)
+    lenX, lenY = len(x), len(y)
+    D = np.zeros((lenX + 1, lenY + 1), dtype=np.int32)
+    for i in range(1, lenX + 1):
+        D[i][0] = D[i - 1][0] + 1
+    for j in range(1, lenY + 1):
+        D[0][j] = D[0][j - 1] + 1
+        for i in range(1, lenX + 1):
+            D[i][j] = min(
+                D[i - 1][j] + 1,
+                D[i][j - 1] + 1,
+                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+            )
+
     posicion_x = len(x)
     posicion_y = len(y)
     camino = []
@@ -93,7 +102,7 @@ def levenshtein(x, y, threshold):
     # completar versión reducción coste espacial y parada por threshold
 
     """
-    La diferencia con levenshtein_reduccion es que esta vez tenermos un parametro umbral y si al finalizar la ejecucion la distancia de edicion minima es igual al umbral +1 
+    La diferencia con levenshtein_reduccion es que esta vez tenermos un parametro umbral y si al finalizar la ejecucion la distancia de edicion minima es igual o mayor al umbral +1 
     retornaremos umbral + 1 y haremos una parada temprana 
     """
     lenX = len(x) + 1
@@ -110,6 +119,7 @@ def levenshtein(x, y, threshold):
                 vprev[j-1] if x[i - 1] == y[j - 1] else  vprev[j-1] + 1, 
                 vcurrent[j-1] + 1 
             )
+            if (vcurrent[j] > threshold): return threshold+1
             
         vprev = vcurrent
         vcurrent = [(i + 1) for _ in range(lenY)]
@@ -128,18 +138,22 @@ def damerau_restricted_matriz(x, y, threshold=None):
     for j in range(1, lenY + 1):
         D[0][j] = D[0][j - 1] + 1
 
+    """
+    Al igual que con la versión de levenshtein con matriz, se inicializa la primera fila y la primera columna a los valores de la longitud de las respectivas cadenas hasta ese punto
+    """
+
     for i in range(1, lenX + 1):
         for j in range(1, lenY + 1):
             if i > 1 and j > 1:
-                if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]:
-                    D[i][j] = min(D[i][j - 1] + 1,
-                                  D[i - 1][j] + 1,
-                                  D[i - 1][j - 1] + 1,
-                                  D[i - 2][j - 2] + (x[i - 1] != y[j - 1]))
+                if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2]: # Comprueba si se pueden transponer los simbolos de las cadenas
+                    D[i][j] = min(D[i][j - 1] + 1, # Operacion de insercion
+                                  D[i - 1][j] + 1, # Operacion de borrado
+                                  D[i - 1][j - 1] + 1, # Operacion de sustitucion
+                                  D[i - 2][j - 2] + (x[i - 1] != y[j - 1])) # Operacion de intercambio
                     continue
-            D[i][j] = min(D[i - 1][j] + 1,
-                          D[i][j - 1] + 1,
-                          D[i - 1][j - 1] + (x[i - 1] != y[j - 1]))
+            D[i][j] = min(D[i - 1][j] + 1, # Operacion de borrado
+                          D[i][j - 1] + 1, # Operacion de insercion
+                          D[i - 1][j - 1] + (x[i - 1] != y[j - 1])) # Operacion de sustitucion
 
     return D[len(x), len(y)]
 
@@ -166,28 +180,33 @@ def damerau_restricted_edicion(x, y, threshold=None):
                           D[i][j - 1] + 1,
                           D[i - 1][j - 1] + (x[i - 1] != y[j - 1]))
 
+    # Hasta este punto es igual a la version de matriz
+
     posicion_x = lenX
     posicion_y = lenY
-    camino = []
+    camino = [] # Se añade un vector camino donde se guarda el camino recorrido
 
     while posicion_x != 0 and posicion_y != 0:
-        # compuebo si hay transposicion
+        # Se comprueba si hay transposicion
         if x[posicion_x-2]==y[posicion_y-1] and x[posicion_x-1]==y[posicion_y-2]:
             camino.append((x[posicion_x - 2] + ''+x[posicion_x - 1],x[posicion_x - 1] +''+ x[posicion_x - 2]))
             posicion_x -= 2
             posicion_y -= 2
         else:
-            if D[posicion_x, posicion_y] == D[posicion_x-1, posicion_y] + 1:
+            if D[posicion_x, posicion_y] == D[posicion_x-1, posicion_y] + 1: # Operacion de eliminacion
                 camino.append((x[posicion_x-1],''))
                 posicion_x -= 1
-            elif D[posicion_x, posicion_y] == D[posicion_x, posicion_y-1] + 1 :
+            elif D[posicion_x, posicion_y] == D[posicion_x, posicion_y-1] + 1 : # Operacion de insercion
                 camino.append(('', y[posicion_y-1]))
                 posicion_y -= 1
             else:
-                camino.append((x[posicion_x-1], y[posicion_y-1]))
+                camino.append((x[posicion_x-1], y[posicion_y-1])) # Operacion de sustitucion
                 posicion_x -= 1
                 posicion_y -= 1
 
+    """
+    Si alguna de las cadenas no ha llegado al final, se amplian con inserciones/borrados
+    """
 
     while posicion_x != 0:
         camino.append((x[posicion_x - 1], ''))

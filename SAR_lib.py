@@ -63,10 +63,10 @@ class SAR_Indexer:
         self.show_snippet = False # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False # valor por defecto, se cambia con self.set_stemming()
         # ALT - COMPLETAR
-        self.use_spelling = False
-        self.distance = None
-        self.threshold = None 
-        self.speller = None
+        self.use_spelling = False # Se usará para elegir usar el corrector o no
+        self.distance = None # Se usará para identificar qué función de distancia se ha de emplear
+        self.threshold = None # Se usará para determinar el umbral máximo
+        self.speller = None # Esta variable alojará al objeto de la clase spellsuggester
     ###############################
     ###                         ###
     ###      CONFIGURACION      ###
@@ -290,10 +290,10 @@ class SAR_Indexer:
         """
         
         # ALT - COMPLETAR        
-        self.use_spelling = use_spelling
-        self.distance = distance
-        self.threshols = threshold
-        self.speller = spellsuggester.Spellsuggester(opcionesSpell, vocab=[], default_distance=self.distance, default_threshold=self.threshold)
+        self.use_spelling = use_spelling # Indica si se usará la correccion o no
+        self.distance = distance # Indica que funcion de distancia se va a usar
+        self.threshold = threshold # Indica el umbral máximo
+        self.speller = spellsuggester.Spellsuggester(opcionesSpell, vocab=[], default_distance=self.distance, default_threshold=self.threshold) # Crea el objeto de la clase Spellsuggester
     
     
     def tokenize(self, text:str):
@@ -447,6 +447,11 @@ class SAR_Indexer:
         # ALT - MODIFICAR
         term = term.lower()
         r1 = self.index[field].get(term, [])
+
+        """
+        Si el termino no esta tal cual en el vocabulario, se llama a suggest y devuelve un posting con or con todos los terminos a una distancia <= a threshold
+        """
+
         if not r1 and self.use_spelling:
 
             speller_resul = self.speller.suggest(term, self.distance, self.threshold)
