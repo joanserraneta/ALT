@@ -1,5 +1,4 @@
 import numpy as np
-import math
 
 def levenshtein_matriz(x, y, threshold=None):
     # esta versión no utiliza threshold, se pone porque se puede
@@ -16,7 +15,6 @@ def levenshtein_matriz(x, y, threshold=None):
                 D[i][j - 1] + 1,
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
             )
-
     return D[lenX, lenY]
 
 def levenshtein_edicion(x, y, threshold=None):
@@ -65,7 +63,6 @@ def levenshtein_edicion(x, y, threshold=None):
 
 def levenshtein_reduccion(x, y, threshold=None):
     # completar versión con reducción coste espacial
-
     lenX = len(x) + 1
     lenY = len(y) + 1
 
@@ -85,6 +82,7 @@ def levenshtein_reduccion(x, y, threshold=None):
         vcurrent = [(i + 1) for _ in range(lenY)]
 
     return vprev[lenY - 1]
+    
 
 def levenshtein(x, y, threshold):
     # completar versión reducción coste espacial y parada por threshold
@@ -193,15 +191,13 @@ def damerau_restricted_edicion(x, y, threshold=None):
 
     return D[lenX, lenY], camino
 
-
 def damerau_restricted(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
-    return []
-
+     return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
 
 def damerau_intermediate_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein intermedia con matriz
-    return[]
+    return D[lenX, lenY]
 
 def damerau_intermediate_edicion(x, y, threshold=None):
     # partiendo de matrix_intermediate_damerau añadir recuperar
@@ -210,24 +206,23 @@ def damerau_intermediate_edicion(x, y, threshold=None):
     return 0,[] # COMPLETAR Y REEMPLAZAR ESTA PARTE
     
 def damerau_intermediate(x, y, threshold=None):
-    # versión con reductam_x = len(x) + 1
-    return [] 
-    
+    # versión con reducción coste espacial y parada por threshold
+    return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
 
 opcionesSpell = {
     'levenshtein_m': levenshtein_matriz,
     'levenshtein_r': levenshtein_reduccion,
     'levenshtein':   levenshtein,
-   # 'levenshtein_o': levenshtein_cota_optimista,
+    #'levenshtein_o': levenshtein_cota_optimista,
     'damerau_rm':    damerau_restricted_matriz,
-  #  'damerau_r':     damerau_restricted,
-   # 'damerau_im':    damerau_intermediate_matriz,
-  #   'damerau_i':     damerau_intermediate
+    #'damerau_r':     damerau_restricted,
+    #'damerau_im':    damerau_intermediate_matriz,
+    #'damerau_i':     damerau_intermediate
 }
 
 opcionesEdicion = {
     'levenshtein': levenshtein_edicion,
     'damerau_r':   damerau_restricted_edicion,
-   # 'damerau_i':   damerau_intermediate_edicion
+    #'damerau_i':   damerau_intermediate_edicion
 }
 
