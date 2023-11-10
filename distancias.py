@@ -19,37 +19,35 @@ def levenshtein_matriz(x, y, threshold=None):
 
 def levenshtein_edicion(x, y, threshold=None):
     # a partir de la versión levenshtein_matriz
-    lenX, lenY = len(x), len(y)
-    D = np.zeros((lenX + 1, lenY + 1), dtype=np.int32)
-    for i in range(1, lenX + 1):
-        D[i][0] = D[i - 1][0] + 1
-    for j in range(1, lenY + 1):
-        D[0][j] = D[0][j - 1] + 1
-        for i in range(1, lenX + 1):
-            D[i][j] = min(
-                D[i - 1][j] + 1,
-                D[i][j - 1] + 1,
-                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
-            )
-
-    posicion_x = lenX
-    posicion_y = lenY
+    """
+    Creamos la matriz con el metodo anterior y la metemos en una variable llamada D
+    """
+    D = levenshtein_matriz(x,y)
+    posicion_x = len(x)
+    posicion_y = len(y)
     camino = []
+    """
+    En este bucle comparamos las cadenas de entrada con la matriz D y dependiendo de si la fila superior en la misma 
+    columna o la misma columna en una fila distinta tienen valor igual sabremos si las cadenas tienen el mismo valor en esa posicion (retrocediendo en las dos posiciones de Y y X)
+    o si por el contrario son distintas sabremos cual es la diferencia retrocediendo en la matriz por la parte de la cadena X o Y
+    """
 
     while posicion_x != 0 and posicion_y != 0:
         if D[posicion_x, posicion_y] == D[posicion_x-1, posicion_y] + 1:
-            camino.append((x[posicion_x-1],''))
+            camino.append((x[posicion_x-1],'')) #Operacion de eliminacion
             posicion_x -= 1
         elif D[posicion_x, posicion_y] == D[posicion_x, posicion_y-1] + 1 :
-            camino.append(('', y[posicion_y-1]))
+            camino.append(('', y[posicion_y-1])) #Operacion de insercion
             posicion_y -= 1
         else:
-            camino.append((x[posicion_x-1], y[posicion_y-1]))
+            camino.append((x[posicion_x-1], y[posicion_y-1])) #Operacion de sustitución o cambio
             posicion_x -= 1
             posicion_y -= 1
             
-    
-    while posicion_x != 0:
+    """
+    Al terminar alguna de las dos continuamos añadiendo a la traza si alguna palabra tiene una longitud distinta
+    """
+    while posicion_x != 0: 
         camino.append((x[posicion_x-1], ''))
         posicion_x -= 1
     
@@ -59,13 +57,16 @@ def levenshtein_edicion(x, y, threshold=None):
 
     camino.reverse()
 
-    return D[lenX, lenY],camino 
+    return D[len(x), len(y)],camino 
 
 def levenshtein_reduccion(x, y, threshold=None):
     # completar versión con reducción coste espacial
     lenX = len(x) + 1
     lenY = len(y) + 1
 
+    """
+    el principal cambio en esta funcion es que se reduce el coste espacial con el uso de dos vectores en lugar de una matriz completa
+    """
     vcurrent = [(1) for i in range(lenY)]
     vprev = [(i) for i in range(lenY)]
 
@@ -73,19 +74,28 @@ def levenshtein_reduccion(x, y, threshold=None):
     for i in range(1, lenX):
         for j in range(1, lenY):
             vcurrent[j] = min(
-                vprev[j] + 1,
-                vprev[j-1] if x[i - 1] == y[j - 1] else  vprev[j-1] + 1,
-                vcurrent[j-1] + 1
+                vprev[j] + 1, #Representa la distancia de edicion por insercion
+                vprev[j-1] if x[i - 1] == y[j - 1] else  vprev[j-1] + 1, #Representa la distancia de edicion por sustitucion (o 0 si los caracteres son iguales)
+                vcurrent[j-1] + 1 #Representa la distancia de edición por borrado
             )
 
+        """
+        Después de cada iteración a lo largo de las cadenas, se actualiza vprev con los valores de vcurrent, y vcurrent se reinicia para la próxima iteración.
+        """
+
         vprev = vcurrent
-        vcurrent = [(i + 1) for _ in range(lenY)]
+        vcurrent = [(i + 1) for _ in range(lenY)] 
 
     return vprev[lenY - 1]
     
 
 def levenshtein(x, y, threshold):
     # completar versión reducción coste espacial y parada por threshold
+
+    """
+    La diferencia con levenshtein_reduccion es que esta vez tenermos un parametro umbral y si al finalizar la ejecucion la distancia de edicion minima es igual al umbral +1 
+    retornaremos umbral + 1 y haremos una parada temprana 
+    """
     lenX = len(x) + 1
     lenY = len(y) + 1 
     
