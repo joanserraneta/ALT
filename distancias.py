@@ -119,7 +119,9 @@ def levenshtein(x, y, threshold):
                 vprev[j-1] if x[i - 1] == y[j - 1] else  vprev[j-1] + 1, 
                 vcurrent[j-1] + 1 
             )
-            if (vcurrent[j] > threshold): return threshold+1
+            # Verificar si el valor añadido supera el umbral
+            if vcurrent[j] > threshold: 
+                return threshold+1 # Parada temprana
             
         vprev = vcurrent
         vcurrent = [(i + 1) for _ in range(lenY)]
@@ -127,7 +129,48 @@ def levenshtein(x, y, threshold):
     return min(vprev[lenY - 1], threshold+1)
 
 def levenshtein_cota_optimista(x, y, threshold):
-    return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
+
+    """
+    Se calcula una cota optimista en funcion de la cantidad de veces que aparece cada letra en cada palabra
+    Para ello se crea un diccionario con claves las letras de cada palabra y valores la cantidad de esa letra
+    Despues se suman las ocurrencias de cada letra en una palabra menos en la otra palabra y se obtiene la cota con el maximo de las diferencias entre las letras de las palabras
+    """
+
+    count_x = {char: x.count(char) for char in set(x)}
+    count_y = {char: y.count(char) for char in set(y)}
+        
+    sum_positive = sum(max(0, count_x[char] - count_y[char]) for char in count_x)
+    sum_negative = sum(max(0, count_y[char] - count_x[char]) for char in count_y)
+
+    cota_optimista = max(sum_positive,sum_negative)
+
+    # Comprobar si la cota supera el threshold
+    if cota_optimista > threshold:
+        return threshold + 1 # Parada temprana
+
+    lenX = len(x) + 1
+    lenY = len(y) + 1 
+    
+    vcurrent = [(i) for i in range(lenY)]
+    vprev = [(i) for i in range(lenY)]
+    
+    for i in range(1, lenX):
+        for j in range(1, lenY):
+            cost = 0 if x[i - 1] == y[j - 1] else 1
+            vcurrent[j] = min(
+                vprev[j] + 1,
+                vprev[j-1] + cost,
+                vcurrent[j-1] + 1
+            )
+            
+            # Verificar si el valor añadido supera el umbral
+            if vcurrent[j] > threshold:
+                return threshold + 1  # Parada temprana
+    
+        vprev = vcurrent
+        vcurrent = [(i + 1) for _ in range(lenY)]
+
+    return min(vprev[lenY - 1], threshold + 1)
 
 def damerau_restricted_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein restringida con matriz
@@ -242,7 +285,7 @@ opcionesSpell = {
     'levenshtein_m': levenshtein_matriz,
     'levenshtein_r': levenshtein_reduccion,
     'levenshtein':   levenshtein,
-    #'levenshtein_o': levenshtein_cota_optimista,
+    'levenshtein_o': levenshtein_cota_optimista,
     'damerau_rm':    damerau_restricted_matriz,
     #'damerau_r':     damerau_restricted,
     #'damerau_im':    damerau_intermediate_matriz,
